@@ -53,7 +53,7 @@ int refree(char *ttt[])
     else return 0;
 }
 
-void tictactoe(void *arg)
+void* tictactoe(void *arg)
 {
   char *x[]={"___", "___", "___"};
   int gamesock;
@@ -107,6 +107,11 @@ void tictactoe(void *arg)
     sendto(sockfd,(const char *)"Draw",strlen("X won"),MSG_CONFIRM,(const struct *)&player1,len);
     sendto(sockfd,(const char *)"Draw",strlen("X won"),MSG_CONFIRM,(const struct *)&player2,len);
   }
+  if(av_ports[0][0]==porter)
+    av_ports[0][1]=1;
+  else if(av_ports[1][0]==porter)
+    av_ports[1][1]=1;
+  flag=0;
 }
 
 void main()
