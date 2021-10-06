@@ -121,6 +121,8 @@ void* tictactoe(void *arg)
     av_ports[1][1]=1;
   close(gamesock);
   flag=0;
+  pthread_exit(NULL);
+  return NULL;
 }
 
 void main()
@@ -161,6 +163,7 @@ void main()
             i+=2;
           }
       }
+      if(flag==1)
       sendto(sockfd,(const char *)"Waiting for your opponent to join",strlen("Waiting for your opponent to join"),MSG_CONFIRM,(const struct sockaddr *)&cliaddr,len);
     }
     else if(flag==1)

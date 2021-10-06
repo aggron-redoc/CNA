@@ -24,9 +24,10 @@ void main()
  int porter=8080;
  servaddr.sin_family = AF_INET;
  servaddr.sin_port = htons(porter);
- servaddr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
+ servaddr.sin_addr.s_addr = INADDR_ANY;
  int n, len;
- sendto(sockfd, (const char *)"match", strlen("match"),MSG_CONFIRM, (const struct sockaddr *) &servaddr,sizeof(servaddr));
+ char temp[]="summa";
+ sendto(sockfd, (const char *)temp, strlen(temp),MSG_CONFIRM, (const struct sockaddr *) &servaddr,sizeof(servaddr));
  n = recvfrom(sockfd, (char *)buffer, MAXLINE,MSG_WAITALL, (struct sockaddr *) &servaddr,&len);
  buffer[n]='\0';
  printf("%s\n",buffer);
