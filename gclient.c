@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #define INT_MAX 2147483647
 
-void XOtable(char *x[])
+void XOtable(char x[][4])
 {
   for(int i=0;i<3;i++)
   {
@@ -55,78 +55,74 @@ void main(int argc, char **argv)
  recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr,&len);
  sscanf(buffer,"%d",&porter);
  printf("Port alloted: %d\n",porter);
- close(sockfd);
- struct sockaddr_in servaddr2;
- if ( (sockfd2 = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
-      perror("socket creation failed");
-      exit(EXIT_FAILURE);
-  }
- memset(&servaddr2, 0, sizeof(servaddr2));
- servaddr2.sin_family = AF_INET;
- servaddr2.sin_port = htons(porter);
- servaddr2.sin_addr.s_addr = inet_addr(argv[1]);
- int result=1,i=0,m,u;
- char *x[]={"___", "___", "___"};
+ servaddr.sin_port=htons(porter);
+ int result=1,i=0,m=0,u=0;
+ char x[][4]={"___", "___", "___"};
  XOtable(x);
- printf("hi\n");
- printf("%d %d",flag,i);
  while(result==1)
  {
-   if((i)%2==0 && flag==1)
+   if(i%2==0 && flag==1)
    {
-     printf("Why??");
-     char bufferr[1024];
-     printf("Why??");
-     recvfrom(sockfd2,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr2, &len);
-     printf("Waiting\n");
-     printf("%s",buffer);
-     scanf("%d %d",&m,&u);
+     printf("Turn of: %s %d\n",inet_ntoa(servaddr.sin_addr),ntohs(servaddr.sin_port));
+     recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr, &len);
+     //printf("Waiting\n");
+     int valid_move=0;
+     while(!valid_move)
+     {
+      printf("%s",buffer);
+      scanf("%d %d",&m,&u);
+      if(m>=0 && m<=2 && u>=0 && u<=2 && x[m][u]=='_')valid_move=1;
+      else printf("Invalid Move.Please Try again!!\n");
+     }
      x[m][u]='X';
+     printf("\n");
      XOtable(x);
      char coos[20];
      sprintf(coos,"%d %d",m,u);
-     sendto(sockfd2,coos,sizeof(coos),0,(struct sockaddr *) &servaddr2, len);
+     sendto(sockfd,coos,sizeof(coos),0,(struct sockaddr *) &servaddr, len);
    }
-   else if((i)%2==0 && flag==0)
+   else if(i%2==0 && flag==0)
    {
-     printf("Why??");
-     char buffer[1024];
-     recvfrom(sockfd2,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr2, &len);
+     recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr, &len);
      sscanf(buffer,"%d %d",&m,&u);
      x[m][u]='X';
      printf("Opponent's move: \n");
      XOtable(x);
    }
-   else if((i)%2==1 && flag==1)
+   else if(i%2==1 && flag==1)
    {
-     printf("Why??");
-     char buffer[1024];
-     recvfrom(sockfd2,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr2, &len);
+     recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr, &len);
      sscanf(buffer,"%d %d",&m,&u);
      x[m][u]='O';
      printf("Opponent's move: \n");
      XOtable(x);
    }
-   else if((i)%2==1 && flag==0)
+   else if(i%2==1 && flag==0)
    {
-     printf("Why??");
-     char buffer[1024];
-     recvfrom(sockfd2,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr2, &len);
+     recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr, &len);
      printf("%s",buffer);
-     scanf("%d %d",&m,&u);
+     int valid_move=0;
+     while(!valid_move)
+     {
+      printf("%s",buffer);
+      scanf("%d %d",&m,&u);
+      if(m>=0 && m<=2 && u>=0 && u<=2 && x[m][u]=='_')valid_move=1;
+      else printf("Invalid Move.Please Try again!!\n");
+     }
+     printf("\n");
      x[m][u]='O';
      XOtable(x);
      char coos[20];
      sprintf(coos,"%d %d",m,u);
-     sendto(sockfd2,coos,sizeof(coos),0,(struct sockaddr *) &servaddr2, len);
+     sendto(sockfd,coos,sizeof(coos),0,(struct sockaddr *) &servaddr, len);
    }
    char sresult[10];
-   recvfrom(sockfd2,sresult,sizeof(sresult),0,(struct sockaddr *)&servaddr2,&len);
+   recvfrom(sockfd,sresult,sizeof(sresult),0,(struct sockaddr *)&servaddr,&len);
    sscanf(sresult,"%d",&result);
    i++;
  }
- printf("bye");
- recvfrom(sockfd2,buffer,sizeof(buffer),0,(struct sockaddr *)&servaddr2,&len);
+ //printf("bye");
+ recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *)&servaddr,&len);
  printf("%s\n",buffer);
- close(sockfd2);
+ close(sockfd);
 }
