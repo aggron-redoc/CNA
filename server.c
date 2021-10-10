@@ -7,7 +7,6 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include<pthread.h>
-#define MAXLINE 1024
 
 struct val_req_players
 {
@@ -17,8 +16,9 @@ struct val_req_players
 
 int av_ports[3][3]={{8090,1},{8092,1}};
 int flag=0;
-int len,n;
-char buffer[MAXLINE];
+int n;
+socklen_t len;
+char buffer[1024];
 int refree(char *ttt[])
 {
   //1 for game in line
@@ -27,7 +27,7 @@ int refree(char *ttt[])
   //3 for player2 win
   int count=0;
   for(int i=0;i<3;i++)
-    for(int j=0;j<strlen(ttt[i]);j++)
+    for(int j=0;j<sizeof(ttt[i]);j++)
       if(ttt[i][j]=='X' || ttt[i][j]=='O')count++;
   if((ttt[0][0]=='X' && ttt[1][1]=='X' && ttt[2][2]=='X') ||
    (ttt[0][0]=='X' && ttt[0][1]=='X' && ttt[0][2]=='X') ||
@@ -71,7 +71,7 @@ void* tictactoe(void *arg)
   servaddr.sin_addr.s_addr = INADDR_ANY;
   int porter=arg2->porter;
   servaddr.sin_port = htons(porter);
-  if ( bind(gamesock, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 )
+  if ( bind(gamesock, ( struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 )
   {
     perror("bind failed");
     exit(EXIT_FAILURE);
@@ -82,38 +82,40 @@ void* tictactoe(void *arg)
     char bufferr[50];
     if((i++)%2==0)
     {
-      n=recvfrom(gamesock,(char *)buffer,MAXLINE,MSG_WAITALL,(struct sockaddr *) &player1, &len);
+      n=recvfrom(gamesock,buffer,sizeof(buffer),0,(struct sockaddr *) &player1, &len);
       buffer[n]='\0';
-      sscanf(buffer,"%d %d",&m,&u);
+      char bufferrr[100];
+      sscanf(bufferrr,"%d %d",&m,&u);
       x[m][u]='X';
-      sendto(gamesock,(const char *)buffer,strlen(buffer),MSG_CONFIRM,(const struct sockaddr *) &player2,len);
+      sendto(gamesock,bufferrr,sizeof(buffer),0,( struct sockaddr *) &player2,len);
     }
     else
     {
-      n=recvfrom(gamesock,(char *)buffer,MAXLINE,MSG_WAITALL,(struct sockaddr *) &player2, &len);
+      n=recvfrom(gamesock,buffer,sizeof(buffer),0,(struct sockaddr *) &player2, &len);
       buffer[n]='\0';
-      sscanf(buffer,"%d %d",&m,&u);
+      char bufferrr[100];
+      sscanf(bufferrr,"%d %d",&m,&u);
       x[m][u]='O';
-      sendto(gamesock,(const char *)buffer,strlen(buffer),MSG_CONFIRM,(const struct sockaddr *) &player1,len);
+      sendto(gamesock,bufferrr,sizeof(buffer),0,( struct sockaddr *) &player1,len);
     }
     sprintf(bufferr,"%d",result);
-    sendto(gamesock,(const char *)bufferr,strlen(bufferr),MSG_CONFIRM,(const struct sockaddr *) &player1,len);
-    sendto(gamesock,(const char *)bufferr,strlen(bufferr),MSG_CONFIRM,(const struct sockaddr *) &player2,len);
+    sendto(gamesock,bufferr,sizeof(bufferr),0,( struct sockaddr *) &player1,len);
+    sendto(gamesock,bufferr,sizeof(bufferr),0,( struct sockaddr *) &player2,len);
   }
   if(result==2)
   {
-    sendto(gamesock,(const char *)"X won",strlen("X won"),MSG_CONFIRM,(const struct sockaddr *) &player1,len);
-    sendto(gamesock,(const char *)"X won",strlen("X won"),MSG_CONFIRM,(const struct sockaddr *) &player2,len);
+    sendto(gamesock,"X won",sizeof("X won"),0,( struct sockaddr *) &player1,len);
+    sendto(gamesock,"X won",sizeof("X won"),0,( struct sockaddr *) &player2,len);
   }
   else if(result==3)
   {
-    sendto(gamesock,(const char *)"O won",strlen("X won"),MSG_CONFIRM,(const struct sockaddr *) &player1,len);
-    sendto(gamesock,(const char *)"O won",strlen("X won"),MSG_CONFIRM,(const struct sockaddr *) &player2,len);
+    sendto(gamesock,"O won",sizeof("X won"),0,( struct sockaddr *) &player1,len);
+    sendto(gamesock,"O won",sizeof("X won"),0,( struct sockaddr *) &player2,len);
   }
   else if(result==0)
   {
-    sendto(gamesock,(const char *)"Draw",strlen("X won"),MSG_CONFIRM,(const struct sockaddr *) &player1,len);
-    sendto(gamesock,(const char *)"Draw",strlen("X won"),MSG_CONFIRM,(const struct sockaddr *) &player2,len);
+    sendto(gamesock,"Draw",sizeof("X won"),0,( struct sockaddr *) &player1,len);
+    sendto(gamesock,"Draw",sizeof("X won"),0,( struct sockaddr *) &player2,len);
   }
   if(av_ports[0][0]==porter)
     av_ports[0][1]=1;
@@ -130,32 +132,32 @@ void main()
   int sockfd;
   //tic tac toe
   struct sockaddr_in servaddr, cliaddr,cliaddr2;
-  memset(&servaddr, 0, sizeof(servaddr));
-  memset(&cliaddr, 0, sizeof(cliaddr));
-  memset(&cliaddr2, 0, sizeof(cliaddr2));
   if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 )
   {
        perror("socket creation failed");
        exit(EXIT_FAILURE);
   }
+  memset(&servaddr, 0, sizeof(servaddr));
+  memset(&cliaddr, 0, sizeof(cliaddr));
+  memset(&cliaddr2, 0, sizeof(cliaddr2));
   servaddr.sin_family = AF_INET; // IPv4
   servaddr.sin_addr.s_addr = INADDR_ANY;
-  servaddr.sin_port = htons(8080);
-  if ( bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 )
+  servaddr.sin_port = htons(5000);
+  if ( bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 )
   {
     perror("bind failed");
     exit(EXIT_FAILURE);
   }
-  int ipandport[]={0};
   while(1)
   {
     if(flag==0)
     {
       int len,n;
-      n=recvfrom(sockfd,(char *)buffer,MAXLINE,MSG_WAITALL,(struct sockaddr *) &cliaddr, &len);
-      buffer[n]='\0';
+      n=recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *) &cliaddr, &len);
+      printf("%s\n",inet_ntoa(cliaddr.sin_addr));
       if(!(strcmp("match",buffer)))
       {
+        printf("hi\n");
         for(int i=0;i<2;i++)
           if(av_ports[i][1]==1)
           {
@@ -164,15 +166,21 @@ void main()
           }
       }
       if(flag==1)
-      sendto(sockfd,(const char *)"Waiting for your opponent to join",strlen("Waiting for your opponent to join"),MSG_CONFIRM,(const struct sockaddr *)&cliaddr,len);
+      {
+        int sflag=sendto(sockfd,"Waiting for your opponent to join",sizeof("Waiting for your opponent to join"),0,(struct sockaddr *)&cliaddr,len);
+        printf("sent%d\n",sflag);
+      }
     }
     else if(flag==1)
     {
-      n=recvfrom(sockfd,(char *)buffer,MAXLINE,MSG_WAITALL,(struct sockaddr*) &cliaddr2, &len);
-      buffer[n]='\0';
+      socklen_t len2;
+      memset(&cliaddr2,0,sizeof(cliaddr2));
+      n=recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr*) &cliaddr2, &len2);
+      printf("Client2: %s\n",inet_ntoa(cliaddr2.sin_addr));
       struct val_req_players v;
       if(!(strcmp("match",buffer)))
       {
+        printf("Hello\n");
         for(int i=0;i<2;i++)
           if(av_ports[i][1]==2)
           {
@@ -181,11 +189,11 @@ void main()
             v.porter=av_ports[i][0];
           }
         char port_string[50];sprintf(port_string,"%d",v.porter);
-          sendto(sockfd,(const char *)"You are O!",strlen("You are O!"),MSG_CONFIRM,(const struct sockaddr *)&cliaddr2,len);
-        sendto(sockfd,(const char *)"Opponent found! Initiating the match!",strlen("Opponent found! Initiating the match!"),MSG_CONFIRM,(const struct sockaddr *)&cliaddr,len);
-        sendto(sockfd,(const char *)"Opponent found! Initiating the match!",strlen("Opponent found! Initiating the match!"),MSG_CONFIRM,(const struct sockaddr *)&cliaddr2,len);
-        sendto(sockfd,(const char *)port_string,strlen(port_string),MSG_CONFIRM,(const struct sockaddr *)&cliaddr,len);
-        sendto(sockfd,(const char *)port_string,strlen(port_string),MSG_CONFIRM,(const struct sockaddr *)&cliaddr2,len);
+        sendto(sockfd,"You are O!",sizeof("You are O!"),0,(struct sockaddr *)&cliaddr2,len2);
+        sendto(sockfd,"Opponent found! Initiating the match!",sizeof("Opponent found! Initiating the match!"),0,(struct sockaddr *)&cliaddr,len);
+        sendto(sockfd,"Opponent found! Initiating the match!",sizeof("Opponent found! Initiating the match!"),0,( struct sockaddr *)&cliaddr2,len2);
+        sendto(sockfd,port_string,sizeof(port_string),0,( struct sockaddr *)&cliaddr,len);
+        sendto(sockfd,port_string,sizeof(port_string),0,( struct sockaddr *)&cliaddr2,len2);
         v.players[0]=cliaddr;
         v.players[1]=cliaddr2;
         pthread_t x;
@@ -197,12 +205,12 @@ void main()
     }
     else
     {
-      n=recvfrom(sockfd,(char *)buffer,MAXLINE,MSG_WAITALL,(struct sockaddr *) &cliaddr, &len);
+      n=recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *) &cliaddr, &len);
       buffer[n]='\0';
       struct val_req_players v;
       if(!(strcmp("match",buffer)))
       {
-        sendto(sockfd,(const char *)"All servers busy!!",strlen("All servers busy!!"),MSG_CONFIRM,(const struct sockaddr *)&cliaddr,len);
+        sendto(sockfd,"All servers busy!!",sizeof("All servers busy!!"),0,( struct sockaddr *)&cliaddr,len);
       }
       memset(&cliaddr, 0, sizeof(cliaddr));
       memset(&cliaddr2, 0, sizeof(cliaddr2));

@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#define MAXLINE 1024
+
 
 char *SERVER_ADDR="127.0.0.1";
 
@@ -14,32 +14,38 @@ char *SERVER_ADDR="127.0.0.1";
 void main()
 {
   int sockfd;int flag=0;
-  char buffer[MAXLINE];
+  char buffer[1024];
   struct sockaddr_in servaddr;
   if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
        perror("socket creation failed");
        exit(EXIT_FAILURE);
    }
  memset(&servaddr, 0, sizeof(servaddr));
- int porter=8080;
+ int porter=5000;
  servaddr.sin_family = AF_INET;
  servaddr.sin_port = htons(porter);
- servaddr.sin_addr.s_addr = INADDR_ANY;
- int n, len;
- char temp[]="summa";
- sendto(sockfd, (const char *)temp, strlen(temp),MSG_CONFIRM, (const struct sockaddr *) &servaddr,sizeof(servaddr));
- n = recvfrom(sockfd, (char *)buffer, MAXLINE,MSG_WAITALL, (struct sockaddr *) &servaddr,&len);
+ servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+ int n;
+ socklen_t len;
+ char temp[]="match";
+ sendto(sockfd, temp, sizeof(temp),0, ( struct sockaddr *) &servaddr,sizeof(servaddr));
+ printf("%d\n",n);
+ n = recvfrom(sockfd, buffer, sizeof(buffer),0, (struct sockaddr *) &servaddr,&len);
  buffer[n]='\0';
+ printf("%d\n",n);
  printf("%s\n",buffer);
- if((strcmp(buffer,"You are O!")))
+ if((strcmp(buffer,"You are O!")) && strcmp(buffer,"All servers busy!!"))
  {
    printf("You are X\n");
-   flag=1;
+   flag=1;sleep(30);
  }
-
- n = recvfrom(sockfd, (char *)buffer, MAXLINE,MSG_WAITALL, (struct sockaddr *) &servaddr,&len);
+ n = recvfrom(sockfd, buffer, sizeof(buffer),0, (struct sockaddr *) &servaddr,&len);
+ buffer[n]='\0';
+ printf("%s\n",buffer);
+ n = recvfrom(sockfd, buffer, sizeof(buffer),0, (struct sockaddr *) &servaddr,&len);
  buffer[n]='\0';
  sscanf(buffer,"%d",&porter);
+ printf("Port alloted in server: %d\n",porter);
  servaddr.sin_port = htons(porter);
  int result=1;
  char typer=(flag==1)?('X'):('O');
@@ -48,17 +54,17 @@ void main()
  {
    int m,u;
    printf("Give co-ordinates for %c: ",typer);
-   scanf("%d %d ",&m,&u);
+   scanf("%d %d",&m,&u);
    x[m][u]='X';
    char bufferr[50];sprintf(bufferr,"%d %d",m,n);
-   sendto(sockfd,(const char *)bufferr, strlen(bufferr),MSG_CONFIRM,(const struct sockaddr *) &servaddr,sizeof(servaddr));
+   sendto(sockfd,bufferr, sizeof(bufferr),0,( struct sockaddr *) &servaddr,sizeof(servaddr));
    for(int i=0;i<3;i++)
    {
      for(int j=0;j<3;j++)
       printf("%c ",x[i][j]);
     printf("\n");
    }
-   n = recvfrom(sockfd, (char *)buffer, MAXLINE,MSG_WAITALL, (struct sockaddr *) &servaddr,&len);
+   n = recvfrom(sockfd, buffer, sizeof(buffer),0, (struct sockaddr *) &servaddr,&len);
    buffer[n]='\0';
    sscanf(buffer,"%d %d",&m,&u);
    x[m][u]='O';
@@ -68,11 +74,11 @@ void main()
       printf("%c ",x[i][j]);
     printf("\n");
    }
-   n = recvfrom(sockfd, (char *)buffer, MAXLINE,MSG_WAITALL, (struct sockaddr *) &servaddr,&len);
+   n = recvfrom(sockfd,buffer, sizeof(buffer),0, (struct sockaddr *) &servaddr,&len);
    buffer[n]='\0';
    sscanf(buffer,"%d",&result);
  }
- n = recvfrom(sockfd, (char *)buffer, MAXLINE,MSG_WAITALL, (struct sockaddr *) &servaddr,&len);
+ n = recvfrom(sockfd, buffer, sizeof(buffer),0, (struct sockaddr *) &servaddr,&len);
  buffer[n]='\0';
  printf("%s\nGame Over!!",buffer);
  close(sockfd);
