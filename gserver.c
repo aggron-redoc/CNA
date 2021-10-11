@@ -135,6 +135,7 @@ void* tictactoe(void *arg)
       i=INT_MAX-1;
     }
   printf("Bye! Game Over!\n");
+  close(gamesock);
   pthread_detach(pthread_self());
   pthread_exit(NULL);
   return NULL;
