@@ -116,7 +116,6 @@ void main(int argc, char **argv)
      sprintf(coos,"%d %d",m,u);
      sendto(sockfd,coos,sizeof(coos),0,(struct sockaddr *) &servaddr, len);
    }
-   close(gamesock);
    char sresult[10];
    recvfrom(sockfd,sresult,sizeof(sresult),0,(struct sockaddr *)&servaddr,&len);
    sscanf(sresult,"%d",&result);
