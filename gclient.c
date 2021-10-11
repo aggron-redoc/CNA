@@ -63,7 +63,7 @@ void main(int argc, char **argv)
  {
    if(i%2==0 && flag==1)
    {
-     printf("Turn of: %s %d\n",inet_ntoa(servaddr.sin_addr),ntohs(servaddr.sin_port));
+     //printf("Turn of: %s %d\n",inet_ntoa(servaddr.sin_addr),ntohs(servaddr.sin_port));
      recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr, &len);
      //printf("Waiting\n");
      int valid_move=0;
@@ -99,7 +99,8 @@ void main(int argc, char **argv)
    }
    else if(i%2==1 && flag==0)
    {
-     recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr, &len);
+     n=recvfrom(sockfd,buffer,sizeof(buffer),0,(struct sockaddr *) &servaddr, &len);
+     buffer[n]='\0';
      printf("%s",buffer);
      int valid_move=0;
      while(!valid_move)
