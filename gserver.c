@@ -18,7 +18,7 @@ struct val_req_players
 
 
 //this function checks and tells whether game has ended or not
-int refree(char *ttt[])
+int refree(char ttt[][4])
 {
   //1 for game in line
   //0 for draw
@@ -57,7 +57,7 @@ void* tictactoe(void *arg)
 {
   struct val_req_players *arg2 = (struct val_req_players *)arg;
   printf("Inside thread\n");
-  char *x[]={"___", "___", "___"};
+  char x[][4]={"___", "___", "___"};
   int gamesock;
   struct sockaddr_in servaddr;
   if ( (gamesock = socket(AF_INET, SOCK_DGRAM, 0)) < 0 )
@@ -81,19 +81,20 @@ void* tictactoe(void *arg)
   }
   int i=-1;int m,u;int result=1;
   socklen_t len=sizeof(player1),len2=sizeof(player2);
-  while((result=refree(x))==1)
+  while(result==1)
   {
     if((++i)%2==0)//x
     {
       printf("Turn of: %s %d\n",inet_ntoa(player1.sin_addr),ntohs(player1.sin_port));
       int n;
-      sendto(gamesock,"Coordinates for the next 'X': ",0,sizeof("Coordinates for the next 'X': "),(struct sockaddr *) &player1,len);
+      sendto(gamesock,"Coordinates for the next 'X': ",sizeof("Coordinates for the next 'X': "),0,(struct sockaddr *) &player1,len);
       printf("SENT!!\n");
       char bufferr[15];
       recvfrom(gamesock,bufferr,sizeof(bufferr),0,(struct sockaddr *)&player1, &len);
       sscanf(bufferr,"%d %d",&m,&u);
       x[m][u]='X';
-      sendto(gamesock,bufferr,sizeof(bufferr),0,(struct sockaddr *)&player2,sizeof(len2));
+      sendto(gamesock,bufferr,sizeof(bufferr),0,(struct sockaddr *)&player2,len2);
+      result=refree(x);
     }
     else
     {
@@ -105,33 +106,35 @@ void* tictactoe(void *arg)
       sscanf(bufferr,"%d %d",&m,&u);
       x[m][u]='O';
       sendto(gamesock,bufferr,sizeof(bufferr),0,(struct sockaddr *)&player1,len);
+      result=refree(x);
     }
     char sresult[10];
     sprintf(sresult,"%d",result);
-    sendto(gamesock,sresult,sizeof(sresult),0,(struct sockaddr *)&player2,sizeof(player2));
-    sendto(gamesock,sresult,sizeof(sresult),0,(struct sockaddr *)&player1,sizeof(player1));
+    sendto(gamesock,sresult,sizeof(sresult),0,(struct sockaddr *)&player2,len2);
+    sendto(gamesock,sresult,sizeof(sresult),0,(struct sockaddr *)&player1,len);
   }
   if(result==2)
   {
-    sendto(gamesock,"X won",sizeof("X won"),0,( struct sockaddr *) &player1,sizeof(player1));
-    sendto(gamesock,"X won",sizeof("X won"),0,( struct sockaddr *) &player2,sizeof(player2));
+    sendto(gamesock,"X won",sizeof("X won"),0,( struct sockaddr *) &player1,len);
+    sendto(gamesock,"X won",sizeof("X won"),0,( struct sockaddr *) &player2,len2);
   }
   else if(result==3)
   {
-    sendto(gamesock,"O won",sizeof("X won"),0,( struct sockaddr *) &player1,sizeof(player1));
-    sendto(gamesock,"O won",sizeof("X won"),0,( struct sockaddr *) &player2,sizeof(player2));
+    sendto(gamesock,"O won",sizeof("X won"),0,( struct sockaddr *) &player1,len);
+    sendto(gamesock,"O won",sizeof("X won"),0,( struct sockaddr *) &player2,len2);
   }
   else if(result==0)
   {
-    sendto(gamesock,"Draw",sizeof("X won"),0,( struct sockaddr *) &player1,sizeof(player1));
-    sendto(gamesock,"Draw",sizeof("X won"),0,( struct sockaddr *) &player2,sizeof(player2));
+    sendto(gamesock,"Draw",sizeof("X won"),0,( struct sockaddr *) &player1,len);
+    sendto(gamesock,"Draw",sizeof("X won"),0,( struct sockaddr *) &player2,len2);
   }
   for(int i=0;i<AV_PORTS;i++)
     if(av_ports[i][0]==porter)
     {
       av_ports[i][1]=1;
-      i=INT_MAX;
+      i=INT_MAX-1;
     }
+  printf("Bye! Game Over!\n");
   pthread_detach(pthread_self());
   pthread_exit(NULL);
   return NULL;
