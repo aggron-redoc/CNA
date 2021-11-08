@@ -60,4 +60,5 @@ int main(int argc, char **argv)
   recv(sockfd,buffer,sizeof(buffer),0);
   printf("\n%s\n",buffer);
   free(data);
+  close(sockfd);
 }
