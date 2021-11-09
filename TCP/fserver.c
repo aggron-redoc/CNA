@@ -26,7 +26,7 @@ void main()
   scanf(" %[^\n]",filename);
   send(new_socket,filename,sizeof(filename),0);
   FILE *filer=fopen(filename,"r");
-  char buffer[1024];
+  char buffer[1024/*00*/];
   while(fscanf(filer," %[^\n]",buffer)!=-1)
   {
     send(new_socket,buffer,sizeof(buffer),0);
