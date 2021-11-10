@@ -15,10 +15,8 @@ void main(int argc, char **argv)
   servaddr.sin_port=htons(8090);
   servaddr.sin_addr.s_addr=inet_addr(argv[1]);
   connect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
-  char filename[50];
-  recv(sockfd,filename,sizeof(filename),0);
-  printf("Filename: %s\n",filename);
-  FILE *p=fopen(filename,"wb");
+  printf("Filename: %s\n",argv[2]);
+  FILE *p=fopen(argv[2],"wb");
   int si=1024;
   while(si>0)
   {

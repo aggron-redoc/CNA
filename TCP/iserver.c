@@ -7,7 +7,7 @@
 #include<arpa/inet.h>
 #include<stdlib.h>
 
-void main()//for getting the filename
+void main(int argc,char **argv)//for getting the filename
 {
   int sockfd=socket(AF_INET,SOCK_STREAM,0);
   struct sockaddr_in servaddr, cliaddr;
@@ -19,8 +19,7 @@ void main()//for getting the filename
   bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
   listen(sockfd,5);
   int new_socket=accept(sockfd,(struct sockaddr *)&cliaddr,&len);
-  FILE *p = fopen("im3.jpeg","rb");
-  send(new_socket,"im3.jpeg",sizeof("im3.jpeg"),0);
+  FILE *p = fopen(argv[1],"rb");
   char buffer[1024];
   int si;
   while((si=fread(buffer,1,sizeof(buffer),p))>0)
